@@ -28,6 +28,14 @@
 
 ---
 
+### [p4-list-changelists](skills/p4-list-changelists/SKILL.md)
+
+依日期區間、提交者、描述文字或 Changelist 編號範圍，列出符合條件的已提交 P4 Changelist。技能可將「昨天」、「上週」、「今天」等自然語言日期轉成腳本需要的明確篩選格式。
+
+**適用情境：** 想要查詢或產生符合特定條件的 P4 CL 清單，例如列出某人在某段時間內提交、描述含有指定字串、或編號落在指定範圍內的 CL。
+
+---
+
 ### [p4-merge-cl](skills/p4-merge-cl/SKILL.md)
 
 將特定已提交的 Perforce Changelist，從來源 Stream 合併到一個或多個目標 Stream。會處理目標工作區準備、定位來源 CL、執行 `p4 merge` 或必要時退回 `p4 integrate`、安全 resolve，以及建立新的待提交 CL 來承接合併結果。
