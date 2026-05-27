@@ -16,3 +16,4 @@ A collection of AI agent skills for working with Perforce (P4) version control.
 | [p4-move-conflict-files](skills/p4-move-conflict-files/SKILL.md) | Isolates unresolved conflict files into a new pending CL |
 | [p4-port-cl](skills/p4-port-cl/SKILL.md) | Ports a submitted CL's changes to other workspaces/streams |
 | [p4-claude-simplify](skills/p4-claude-simplify/SKILL.md) | Multi-agent code review and cleanup of open P4 files |
+| [p4-stream-remap-ignore-manager](skills/p4-stream-remap-ignore-manager/SKILL.md) | Strictly audits Perforce stream Remapped and Ignored sections, exporting configs and generating unified comparison reports |
