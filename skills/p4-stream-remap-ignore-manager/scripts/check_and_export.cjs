@@ -32,29 +32,71 @@ function getStreamConfig(streamPath) {
 
 /**
  * Highlights matches and returns if any were found.
+ * Improved logic to handle:
+ * 1. Slash normalization (\ -> /)
+ * 2. Wildcard support (...)
+ * 3. Filename matching (fuzzy match)
  */
 function processLine(line, targets, isRemap = false) {
-    let formattedLine = line;
-    let matchFound = false;
+    const normalize = (p) => p.replace(/\\/g, '/').toLowerCase();
+    const getBaseName = (p) => {
+        const parts = p.replace(/\\/g, '/').split('/');
+        return parts[parts.length - 1].replace(/\.\.\.$/, ''); // Remove trailing ...
+    };
 
+    let formattedLine = line;
+    let matchType = null; // 'exact' or 'fuzzy'
+    
+    // Original line parts for remapping
+    let displayLine = line;
     if (isRemap) {
         const parts = line.split(/\s+/);
         if (parts.length >= 2) {
-            formattedLine = `${parts[0]}  ➔  ${parts[1]}`;
+            displayLine = `${parts[0]}  ➔  ${parts[1]}`;
         }
     }
+    formattedLine = displayLine;
+
+    const normalizedLine = normalize(line);
 
     targets.forEach(target => {
-        if (line.toLowerCase().includes(target.toLowerCase())) {
-            const regex = new RegExp(`(${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            formattedLine = formattedLine.replace(regex, '**$1**');
-            matchFound = true;
+        const normalizedTarget = normalize(target);
+        const targetBase = getBaseName(normalizedTarget);
+        
+        if (!targetBase) return;
+
+        // 1. Path Match (Direct inclusion or wildcard coverage)
+        let isPathMatch = normalizedLine.includes(normalizedTarget) || normalizedTarget.includes(normalizedLine.replace(/\.\.\.$/, ''));
+        
+        // Handle Perforce '...' wildcard
+        if (!isPathMatch && normalizedLine.endsWith('...')) {
+            const prefix = normalizedLine.slice(0, -3);
+            if (normalizedTarget.startsWith(prefix)) {
+                isPathMatch = true;
+            }
+        }
+
+        if (isPathMatch) {
+            matchType = 'exact';
+            // Simple highlight
+            const targetRegex = new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            formattedLine = formattedLine.replace(targetRegex, '**$&**');
+        } 
+        // 2. Filename Match (Fuzzy/Suspicious)
+        else if (normalizedLine.includes(targetBase.toLowerCase())) {
+            if (matchType !== 'exact') matchType = 'fuzzy';
+            const baseRegex = new RegExp(targetBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            formattedLine = formattedLine.replace(baseRegex, '*$&*'); // Italic for fuzzy
         }
     });
 
+    let prefix = '　 ';
+    if (matchType === 'exact') prefix = '🚩 ';
+    else if (matchType === 'fuzzy') prefix = '🔍 ';
+
     return { 
-        text: matchFound ? `🚩 ${formattedLine}` : `　 ${formattedLine}`,
-        matchFound 
+        text: `${prefix}${formattedLine}`,
+        matchFound: matchType !== null 
     };
 }
 
