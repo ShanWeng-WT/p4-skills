@@ -92,6 +92,36 @@ function Get-P4Client {
     return $null
 }
 
+function Invoke-P4ChangeInput([string]$clientName, [string]$spec) {
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'p4'
+    $psi.Arguments = "-c $clientName change -i"
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+    # Perforce rejects a UTF-8 BOM at the start of the spec as an unknown field name.
+    $psi.StandardInputEncoding = New-Object System.Text.UTF8Encoding($false)
+    $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $psi
+    [void]$process.Start()
+    $process.StandardInput.Write($spec)
+    $process.StandardInput.Close()
+
+    $stdout = $process.StandardOutput.ReadToEnd()
+    $stderr = $process.StandardError.ReadToEnd()
+    $process.WaitForExit()
+
+    return @{
+        ExitCode = $process.ExitCode
+        Output   = ($stdout + $stderr).Trim()
+    }
+}
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 $Changelist = $Changelist.Trim()
@@ -188,17 +218,17 @@ Description:
 	Conflict files from CL $Changelist - requires manual resolve
 "@
 
-$newCLOutput = $changeSpec | p4 -c $client change -i 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to create new changelist: $newCLOutput"
+$newCLResult = Invoke-P4ChangeInput -clientName $client -spec $changeSpec
+if ($newCLResult.ExitCode -ne 0) {
+    Write-Error "Failed to create new changelist: $($newCLResult.Output)"
     exit 1
 }
 
 $newCL = $null
-if ($newCLOutput -match 'Change (\d+) created') {
+if ($newCLResult.Output -match 'Change (\d+) created') {
     $newCL = $matches[1]
 } else {
-    Write-Error "Could not parse new changelist number from: $newCLOutput"
+    Write-Error "Could not parse new changelist number from: $($newCLResult.Output)"
     exit 1
 }
 

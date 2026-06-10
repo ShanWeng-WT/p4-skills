@@ -60,6 +60,14 @@
 
 ---
 
+### [p4-stream-remap-ignore-manager](skills/p4-stream-remap-ignore-manager/SKILL.md)
+
+專注於 Perforce Stream 的 `Remapped` 與 `Ignored` 區段進行嚴格稽核。遵循固定的互動式工作流程，匯出各 Stream 的設定後，依指定路徑產生統一的比對摘要報告，並以圖示標示符合項目。
+
+**適用情境：** 想要跨多條 Stream 比對 Remapped／Ignored 設定，快速找出哪些 Stream 包含特定路徑的對映或忽略規則。
+
+---
+
 ### [p4-claude-simplify](skills/p4-claude-simplify/SKILL.md)
 
 對目前 P4 工作區中所有已開啟（opened）的檔案，同時啟動三個平行的 AI 審查 Agent，分別從程式碼重用、程式碼品質、執行效率三個面向進行審查，並自動修正發現的問題。
